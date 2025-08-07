@@ -13,6 +13,7 @@ const commentsRouter = require('./routes/comments');
 // CORS ayarları
 app.use(cors({
   origin: [
+      'https://deluxe-biscochitos-c1be48.netlify.app',  // BU EKLENECEK
     'http://localhost:3000', 
     'http://localhost:5173',
     'http://localhost:5174', 
