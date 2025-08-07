@@ -1217,3 +1217,4 @@ async function startServer() {
 }
 
 startServer();
+module.exports = app; // En son satırda
