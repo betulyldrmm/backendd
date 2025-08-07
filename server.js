@@ -1,5 +1,3 @@
-
-
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
@@ -7,13 +5,12 @@ const { Pool } = require('pg');
 
 const app = express();
 
-
 const commentsRouter = require('./routes/comments');
 
-// CORS ayarları
+// CORS ayarları - ESKİ CORS KODLARINI SİL, BUNLARI KOY
 app.use(cors({
   origin: [
-      'https://deluxe-biscochitos-c1be48.netlify.app',  // BU EKLENECEK
+    'https://deluxe-biscochitos-c1be48.netlify.app',
     'http://localhost:3000', 
     'http://localhost:5173',
     'http://localhost:5174', 
@@ -23,16 +20,43 @@ app.use(cors({
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   optionsSuccessStatus: 200
 }));
 
+// Ek CORS middleware - CORS ayarlarından hemen sonra ekle
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    'https://deluxe-biscochitos-c1be48.netlify.app',
+    'http://localhost:3000', 
+    'http://localhost:5173',
+    'http://localhost:5174', 
+    'http://127.0.0.1:5173', 
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5174'
+  ];
+  
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,OPTIONS,POST,PUT,DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Access-Control-Allow-Headers, Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 
 app.options('*', cors());
 
 app.use(express.json());
 
-
+// Buradan sonra diğer kodların devam eder...
 app.use('/api/comments', commentsRouter);
 
 
