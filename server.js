@@ -1176,45 +1176,4 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-const PORT = 5001;
-
-async function startServer() {
-  try {
-    await initDatabase();
-
-    const server = app.listen(PORT, '127.0.0.1', () => {
-      console.log('🚀 Server başlatıldı!');
-      console.log(`📍 Port: ${PORT}`);
-      console.log(`🔗 Test: http://localhost:${PORT}/api/test`);
-      console.log(`👥 Kullanıcılar: http://localhost:${PORT}/api/users`);
-      console.log(`📦 Ürünler: http://localhost:${PORT}/api/products`);
-      console.log(`🔥 İndirimli: http://localhost:${PORT}/api/discounted-products`);
-      console.log(`⭐ Popüler: http://localhost:${PORT}/api/popular-products`);
-      console.log(`📂 Kategoriler: http://localhost:${PORT}/api/categories`);
-      console.log(`💬 Yorumlar: http://localhost:${PORT}/api/comments`);
-      console.log(`🗄️  DB Durum: http://localhost:${PORT}/api/db-status`);
-      console.log('✅ Hazır, istekleri bekliyor...');
-    });
-
-    server.on('error', (err) => {
-      if (err.code === 'EADDRINUSE') {
-        console.log(`❌ Port ${PORT} kullanımda, ${PORT + 1} portunu deniyorum...`);
-        setTimeout(() => {
-          server.close();
-          app.listen(PORT + 1, '127.0.0.1', () => {
-            console.log(`🚀 Server ${PORT + 1} portunda başlatıldı!`);
-          });
-        }, 1000);
-      } else {
-        console.error('❌ Server başlatılamadı:', err);
-      }
-    });
-
-  } catch (error) {
-    console.error('❌ Server başlatılırken hata:', error);
-    process.exit(1);
-  }
-}
-
-startServer();
 module.exports = app; // En son satırda
