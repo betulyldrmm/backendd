@@ -2,59 +2,62 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const { Pool } = require('pg');
+const path = require('path');
+require('dotenv').config(); // .env kullanıyorsan
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 
-const commentsRouter = require('./routes/comments');
-
-// CORS ayarları - ESKİ CORS KODLARINI SİL, BUNLARI KOY
-app.use(cors({
-  origin: [
-    'https://deluxe-biscochitos-c1be48.netlify.app',
-    'http://localhost:3000', 
-    'http://localhost:5173',
-    'http://localhost:5174', 
-    'http://127.0.0.1:5173', 
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:5174'
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-  optionsSuccessStatus: 200
-}));
-
-// Ek CORS middleware - CORS ayarlarından hemen sonra ekle
-app.use((req, res, next) => {
-  const allowedOrigins = [
-    'https://deluxe-biscochitos-c1be48.netlify.app',
-    'http://localhost:3000', 
-    'http://localhost:5173',
-    'http://localhost:5174', 
-    'http://127.0.0.1:5173', 
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:5174'
-  ];
-  
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,OPTIONS,POST,PUT,DELETE');
-  res.setHeader('Access-Control-Allow-Headers', 'Access-Control-Allow-Headers, Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization');
-  
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
+// PostgreSQL bağlantısı
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || 'postgres://kullanici:sifre@localhost:5432/veritabani_adi',
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-app.options('*', cors());
+// CORS ayarları
+const allowedOrigins = [
+  'https://deluxe-biscochitos-c1be48.netlify.app',
+  'https://shop-mind-6mf5-dyt5ppllk-betuls-projects-5b7c9a73.vercel.app', // Yeni backend linkin!
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174',
+  'http://127.0.0.1:3000'
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS hatası: Bu origin engellenmiş.'));
+    }
+  },
+  credentials: true
+}));
 
 app.use(express.json());
+
+// Test route
+app.get('/', (req, res) => {
+  res.send('API çalışıyor...');
+});
+
+// Yönlendirme
+const commentsRouter = require('./routes/comments');
+app.use('/api/comments', commentsRouter);
+
+// HATA YÖNETİMİ
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Sunucu hatası!' });
+});
+
+// Başlat
+app.listen(PORT, () => {
+  console.log(`Server ${PORT} portunda çalışıyor...`);
+});
 
 // Buradan sonra diğer kodların devam eder...
 app.use('/api/comments', commentsRouter);
